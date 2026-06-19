@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Beatport Camelot Key Translator",
+  "version": "1.0.0",
+  "description": "Zeigt auf Beatport die Camelot-Notation für Tonarten an (z.B. A Minor → 1m).",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.beatport.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

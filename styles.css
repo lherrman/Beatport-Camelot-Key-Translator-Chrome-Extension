@@ -1,0 +1,12 @@
+.beatport-camelot-key {
+  display: inline-block;
+  background-color: #ff6b00;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: help;
+}
