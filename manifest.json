@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Beatport Camelot Key Translator",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Displays Camelot notation for musical keys on Beatport (e.g., A Minor -> 1m).",
   "icons": {
     "128": "resources/icon128.png"
