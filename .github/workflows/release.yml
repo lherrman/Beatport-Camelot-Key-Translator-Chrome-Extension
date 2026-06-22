@@ -1,0 +1,80 @@
+name: Build and release extension
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"
+      - "[0-9]*.[0-9]*.[0-9]*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate version and choose package name
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          manifest_version="$(jq -r '.version' manifest.json)"
+          if [[ ! "$manifest_version" =~ ^[0-9]+(\.[0-9]+){0,3}$ ]]; then
+            echo "Invalid Chrome extension version in manifest.json: $manifest_version" >&2
+            exit 1
+          fi
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_version="${GITHUB_REF_NAME#v}"
+            if [[ ! "$tag_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Release tags must use 1.2.3 or v1.2.3 format." >&2
+              exit 1
+            fi
+            if [[ "$tag_version" != "$manifest_version" ]]; then
+              echo "Tag version $tag_version does not match manifest version $manifest_version." >&2
+              exit 1
+            fi
+          fi
+
+          filename="beatport-camelot-key-translator-${manifest_version}.zip"
+          echo "filename=$filename" >> "$GITHUB_OUTPUT"
+          echo "version=$manifest_version" >> "$GITHUB_OUTPUT"
+
+      - name: Build extension ZIP
+        shell: bash
+        run: |
+          zip -r "${{ steps.package.outputs.filename }}" \
+            manifest.json \
+            content.js \
+            styles.css \
+            resources/icon128.png
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beatport-camelot-key-translator-${{ steps.package.outputs.version }}
+          path: ${{ steps.package.outputs.filename }}
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          "${{ steps.package.outputs.filename }}"
+          --title "Beatport Camelot Key Translator ${{ steps.package.outputs.version }}"
+          --generate-notes
+
+    permissions:
+      contents: write
